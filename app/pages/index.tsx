@@ -5,6 +5,8 @@ import styles from '../styles/Home.module.css'
 import { useState, useEffect } from "react";
 import WalletInfo from '../components/WalletInfo';
 import BuyProduct from '../components/BuyProduct';
+
+
 import { 
   Address, 
   TxHash,
@@ -21,6 +23,7 @@ import {
   } from "lucid-cardano"; // NPM
 
 
+
   const alwaysSucceedScript: SpendingValidator = {
     type: "PlutusV2",
     script: "49480100002221200101",
@@ -32,11 +35,13 @@ import {
 
 const Home: NextPage = () => {
 
+
   const [whichWalletSelected, setWhichWalletSelected] = useState(undefined);
   const [walletIsEnabled, setWalletIsEnabled] = useState(false);
   const [API, setAPI] = useState<undefined | any>(undefined);
   const [wInfo, setWalletInfo] = useState({ balance : ''});
   const [tx, setTx] = useState({ txId : '' });
+
 
   useEffect(() => {
     const checkWallet = async () => {
@@ -70,6 +75,7 @@ const Home: NextPage = () => {
     updateWalletInfo();
   }, [API]);
 
+ 
 
   // user selects what wallet to connect to
   const handleWalletSelect = (obj : any) => {
@@ -178,6 +184,8 @@ const Home: NextPage = () => {
   } 
 
 
+  
+
   return (
     <div className={styles.container}>
     <Head>
@@ -211,7 +219,10 @@ const Home: NextPage = () => {
           <p>Please wait until the transaction is confirmed on the blockchain and reload this page before doing another transaction</p>
         </div>}
         {walletIsEnabled && !tx.txId && <div className={styles.border}><BuyProduct onBuyProduct={buyProduct}/></div>}
-      
+        <div>
+        <script>let var = new Request()</script>
+
+        </div>
     </main>
 
     <footer className={styles.footer}>
