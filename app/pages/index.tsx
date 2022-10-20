@@ -140,7 +140,7 @@ const Home: NextPage = () => {
 
   const buyProduct = async (adaQty : any) : Promise<TxHash> => {
   
-    const api_key : string = process.env.NEXT_PUBLIC_BLOCKFROST_API_KEY as string;
+    const api_key : string = "previewahbEiO6qnhyFm5a9Q1N55LabbIX8ZIde";
     const lucid = await Lucid.new(
       new Blockfrost("https://cardano-preview.blockfrost.io/api/v0", api_key),
       "Preview",
@@ -164,14 +164,15 @@ const Home: NextPage = () => {
   
     const tx = await lucid
       .newTx()
-      .readFrom([referenceScriptUtxo]) // spending utxo by reading plutusV2 from reference utxo
       .collectFrom([utxo], Redeemer())
+      .attachSpendingValidator(alwaysSucceedScript)
       .complete();
   
     const signedTx = await tx.sign().complete();
   
     const txHash = await signedTx.submit();
-  
+    console.log("txHash", txHash);
+    setTx({ txId: txHash });
     return txHash;
 
   } 
