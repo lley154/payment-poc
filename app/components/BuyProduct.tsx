@@ -1,7 +1,7 @@
 import { useState } from 'react'
 //import styles from '../styles/Home.module.css'
 
-const BuyProduct = ({ onBuyProduct, orderId } : any) => {
+const BuyProduct = ({ onBuyProduct, orderData } : any) => {
 
     const onSubmit = (e : any) => {
         
@@ -15,7 +15,8 @@ const BuyProduct = ({ onBuyProduct, orderId } : any) => {
         <form onSubmit={onSubmit}>
             <div>
                 <p><b>Buy Product </b></p>
-                <p>Order ID &nbsp; &nbsp;{orderId}</p>
+                <p>Order ID &nbsp; &nbsp;{orderData.orderId}</p>
+                <p>Price &nbsp; &nbsp;${orderData.total_price}</p>
 
                 <input name='qty' type='number' id='qty' placeholder='Buy Product'
                 />

@@ -27,7 +27,33 @@ import {
     // Here we got the order id query parameter from Context
     // Default value is "0"
 
-    return {props: {orderId: orderId}};
+    const shop = process.env.SHOP as string;
+    const uri = "/admin/api/2022-10/orders/";
+    const url = shop + uri + orderId + ".json";
+    console.log("url", url);
+
+    const req = await fetch(url,{
+   
+      //body: JSON.stringify({ id: 1 }),
+      
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'X-Shopify-Access-Token': process.env.ACCESS_TOKEN as string,
+        'Content-Type': 'application/json',
+                 
+      },
+      method: 'GET'
+    });
+    const newData = await req.json();
+
+
+    const orderData = {
+      orderId : newData.order.id,
+      total_price : newData.order.total_price,
+    }
+    console.log(orderData);
+
+    return { props: orderData };
   }
 
 
@@ -48,7 +74,7 @@ const Home: NextPage = (props) => {
   const [wInfo, setWalletInfo] = useState({ balance : ''});
   const [tx, setTx] = useState({ txId : '' });
   const router = useRouter();
-  const [orderId, setId] = useState(props.orderId || 0);
+  const [orderData, setId] = useState<undefined | any>(props);
 
 
   useEffect(() => {
@@ -223,7 +249,7 @@ const Home: NextPage = (props) => {
           <p>TxId &nbsp;&nbsp;<a href={"https://preview.cexplorer.io/tx/" + tx.txId} target="_blank" rel="noopener noreferrer" >{tx.txId}</a></p>
           <p>Please wait until the transaction is confirmed on the blockchain and reload this page before doing another transaction</p>
         </div>}
-        {walletIsEnabled && !tx.txId && <div className={styles.border}><BuyProduct onBuyProduct={buyProduct} orderId={orderId}/></div>}
+        {walletIsEnabled && !tx.txId && <div className={styles.border}><BuyProduct onBuyProduct={buyProduct} orderData={orderData}/></div>}
       
     </main>
 
