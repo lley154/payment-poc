@@ -44,7 +44,6 @@ import {
     });
     const orderData = await req.json();
 
-
     const adaUrl = "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=ADA&convert=USD";
     const adaReq = await fetch(adaUrl, { 
       headers: {
@@ -57,24 +56,22 @@ import {
     });
 
     const adaData = await adaReq.json();
-    console.log("API Key", process.env.COIN_API_KEY as string);
-    console.log("orderData", orderData);
-    console.log("adaData", adaData);
+    //console.log("orderData", orderData);
+    //console.log("adaData", adaData);
 
     if (!orderData.errors) {
       const adaAmount = orderData.order.total_price / adaData.data.ADA[0].quote.USD.price
       const orderInfo = {
         order_id : orderData.order.id,
-        total_price : orderData.order.total_price,
+        total : orderData.order.total_price,
         ada_amount : adaAmount.toFixed(2)
       }
-      console.log("adaData", adaData);
       return { props: orderInfo };
 
     } else {
       const orderInfo = {
         order_id : 0,
-        total_price : 0,
+        total : 0,
         ada_amount : 0,
       }
       return { props: orderInfo };
@@ -202,7 +199,7 @@ const Home: NextPage = (props) => {
     }
   }
 
-  const buyProduct = async (adaQty : any) : Promise<TxHash> => {
+  const buyProduct = async () : Promise<TxHash> => {
   
     const api_key : string = "previewahbEiO6qnhyFm5a9Q1N55LabbIX8ZIde";
     const lucid = await Lucid.new(
@@ -283,7 +280,6 @@ const Home: NextPage = (props) => {
     </footer>
   </div>
     
-
   )
 }
 

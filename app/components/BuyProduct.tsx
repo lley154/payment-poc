@@ -6,7 +6,7 @@ const BuyProduct = ({ onBuyProduct, orderInfo } : any) => {
     const onSubmit = (e : any) => {
         
         e.preventDefault() // prevent full page refresh
-        onBuyProduct(qty)
+        onBuyProduct()
     } 
 
     return (
@@ -15,14 +15,10 @@ const BuyProduct = ({ onBuyProduct, orderInfo } : any) => {
             <div>
                 <p><b>Buy Product </b></p>
                 <p>Order ID &nbsp; &nbsp;{orderInfo.order_id}</p>
-                <p>Price &nbsp; &nbsp;${orderInfo.total_price}</p>
+                <p>Order Total &nbsp; &nbsp;${orderInfo.total}</p>
                 <p>ADA Amount &nbsp; &nbsp;{orderInfo.ada_amount}</p>
-
-                <input name='qty' type='number' id='qty' placeholder='Buy Product'
-                />
             </div>
-            <br/>
-            <input type='submit' value='Buy Product'/>
+            <input type='submit' value='Send Ada'/>
         </form>
 
     )
