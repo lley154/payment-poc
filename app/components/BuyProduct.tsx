@@ -1,9 +1,7 @@
 import { useState } from 'react'
 //import styles from '../styles/Home.module.css'
 
-const BuyProduct = ({ onBuyProduct } : any) => {
-
-    const [qty, setQty] = useState('')
+const BuyProduct = ({ onBuyProduct, orderId } : any) => {
 
     const onSubmit = (e : any) => {
         
@@ -16,16 +14,16 @@ const BuyProduct = ({ onBuyProduct } : any) => {
 
         <form onSubmit={onSubmit}>
             <div>
-                <b>Buy Product</b>
-                <br></br>
-                <input name='qty' type='number' id='qty' placeholder='Buy Product' 
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
+                <p><b>Buy Product </b></p>
+                <p>Order ID &nbsp; &nbsp;{orderId}</p>
+
+                <input name='qty' type='number' id='qty' placeholder='Buy Product'
                 />
             </div>
-            <br/>                      
+            <br/>
             <input type='submit' value='Buy Product'/>
         </form>
+
     )
 }
 

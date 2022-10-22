@@ -5,6 +5,7 @@ import styles from '../styles/Home.module.css'
 import { useState, useEffect } from "react";
 import WalletInfo from '../components/WalletInfo';
 import BuyProduct from '../components/BuyProduct';
+import { useRouter } from 'next/router';
 import { 
   Address, 
   TxHash,
@@ -21,6 +22,15 @@ import {
   } from "lucid-cardano"; // NPM
 
 
+  export async function getServerSideProps(context) {
+    const orderId = (parseInt(context.query.id) || 0).toString();
+    // Here we got the order id query parameter from Context
+    // Default value is "0"
+
+    return {props: {orderId: orderId}};
+  }
+
+
   const alwaysSucceedScript: SpendingValidator = {
     type: "PlutusV2",
     script: "49480100002221200101",
@@ -30,13 +40,16 @@ import {
   const Redeemer = () => Data.empty();
 
 
-const Home: NextPage = () => {
+const Home: NextPage = (props) => {
 
   const [whichWalletSelected, setWhichWalletSelected] = useState(undefined);
   const [walletIsEnabled, setWalletIsEnabled] = useState(false);
   const [API, setAPI] = useState<undefined | any>(undefined);
   const [wInfo, setWalletInfo] = useState({ balance : ''});
   const [tx, setTx] = useState({ txId : '' });
+  const router = useRouter();
+  const [orderId, setId] = useState(props.orderId || 0);
+
 
   useEffect(() => {
     const checkWallet = async () => {
@@ -210,7 +223,7 @@ const Home: NextPage = () => {
           <p>TxId &nbsp;&nbsp;<a href={"https://preview.cexplorer.io/tx/" + tx.txId} target="_blank" rel="noopener noreferrer" >{tx.txId}</a></p>
           <p>Please wait until the transaction is confirmed on the blockchain and reload this page before doing another transaction</p>
         </div>}
-        {walletIsEnabled && !tx.txId && <div className={styles.border}><BuyProduct onBuyProduct={buyProduct}/></div>}
+        {walletIsEnabled && !tx.txId && <div className={styles.border}><BuyProduct onBuyProduct={buyProduct} orderId={orderId}/></div>}
       
     </main>
 
@@ -222,5 +235,8 @@ const Home: NextPage = () => {
 
   )
 }
+
+
+
 
 export default Home
