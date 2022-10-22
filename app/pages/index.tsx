@@ -33,8 +33,6 @@ import {
     console.log("url", url);
 
     const req = await fetch(url,{
-   
-      //body: JSON.stringify({ id: 1 }),
       
       headers: {
         'Access-Control-Allow-Origin': '*',
@@ -44,16 +42,43 @@ import {
       },
       method: 'GET'
     });
-    const newData = await req.json();
+    const orderData = await req.json();
 
 
-    const orderData = {
-      orderId : newData.order.id,
-      total_price : newData.order.total_price,
+    const adaUrl = "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=ADA&convert=USD";
+    const adaReq = await fetch(adaUrl, { 
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'X-CMC_PRO_API_KEY': process.env.COIN_API_KEY as string,
+        'Content-Type': 'application/json',
+                
+      },
+      method: 'GET'
+    });
+
+    const adaData = await adaReq.json();
+    console.log("API Key", process.env.COIN_API_KEY as string);
+    console.log("orderData", orderData);
+    console.log("adaData", adaData);
+
+    if (!orderData.errors) {
+      const adaAmount = orderData.order.total_price / adaData.data.ADA[0].quote.USD.price
+      const orderInfo = {
+        order_id : orderData.order.id,
+        total_price : orderData.order.total_price,
+        ada_amount : adaAmount.toFixed(2)
+      }
+      console.log("adaData", adaData);
+      return { props: orderInfo };
+
+    } else {
+      const orderInfo = {
+        order_id : 0,
+        total_price : 0,
+        ada_amount : 0,
+      }
+      return { props: orderInfo };
     }
-    console.log(orderData);
-
-    return { props: orderData };
   }
 
 
@@ -74,7 +99,7 @@ const Home: NextPage = (props) => {
   const [wInfo, setWalletInfo] = useState({ balance : ''});
   const [tx, setTx] = useState({ txId : '' });
   const router = useRouter();
-  const [orderData, setId] = useState<undefined | any>(props);
+  const [orderInfo, setId] = useState<undefined | any>(props);
 
 
   useEffect(() => {
@@ -249,7 +274,7 @@ const Home: NextPage = (props) => {
           <p>TxId &nbsp;&nbsp;<a href={"https://preview.cexplorer.io/tx/" + tx.txId} target="_blank" rel="noopener noreferrer" >{tx.txId}</a></p>
           <p>Please wait until the transaction is confirmed on the blockchain and reload this page before doing another transaction</p>
         </div>}
-        {walletIsEnabled && !tx.txId && <div className={styles.border}><BuyProduct onBuyProduct={buyProduct} orderData={orderData}/></div>}
+        {walletIsEnabled && !tx.txId && <div className={styles.border}><BuyProduct onBuyProduct={buyProduct} orderInfo={orderInfo}/></div>}
       
     </main>
 
