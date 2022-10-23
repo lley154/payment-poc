@@ -4,6 +4,8 @@ import styles from '../styles/Home.module.css'
 import { useState, useEffect } from "react";
 import WalletInfo from '../components/WalletInfo';
 import BuyProduct from '../components/BuyProduct';
+
+
 import { 
   Address, 
   TxHash,
@@ -77,6 +79,7 @@ import {
       console.log('getServerSideProps', err);
     } 
   }
+
 
   const alwaysSucceedScript: SpendingValidator = {
     type: "PlutusV2",
@@ -175,7 +178,6 @@ const Home: NextPage = (props) => {
     }
     updateOrder();
   }, [txStatus]);
-
 
   // user selects what wallet to connect to
   const handleWalletSelect = (obj : any) => {
@@ -319,6 +321,7 @@ const Home: NextPage = (props) => {
         </div>}
         {walletIsEnabled && !tx.txId && <div className={styles.border}><BuyProduct onBuyProduct={buyProduct} orderInfo={orderInfo}/></div>}
       
+
     </main>
 
     <footer className={styles.footer}>
