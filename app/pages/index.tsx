@@ -53,7 +53,7 @@ import {
       //console.log("adaData", adaData);
 
       if (!orderData.errors) {
-        const adaAmount = orderData.order.total_price / adaPrice;
+        const adaAmount = orderData.order.total_price / adaPrice + 1.25; // adding 1.25 Ada to include tx fees
         const orderInfo = {
           order_id : orderData.order.id,
           total : orderData.order.total_price,
@@ -253,7 +253,7 @@ const Home: NextPage = (props) => {
     
     const tx = await lucid
     .newTx()
-    .payToContract(alwaysSucceedAddress, { inline: Datum() }, { ["lovelace"] : BigInt(10000000)})
+    .payToContract(alwaysSucceedAddress, { inline: Datum() }, { ["lovelace"] : BigInt((orderInfo.ada_amount - 1.25 ) * 1000000)}) // remove 1 Ada for tx fee
     .payToContract(alwaysSucceedAddress, {
       asHash: Datum(),
       scriptRef: alwaysSucceedScript, // adding plutusV2 script to output
