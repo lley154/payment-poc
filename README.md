@@ -5,7 +5,7 @@
 Please add the following to your ~/.bashrc file
 ```
 export NEXT_PUBLIC_BLOCKFROST_API_KEY="xxx"
-export SHOP="https://xxx-2803.myshopify.com/"            # Your test store URL
+export SHOP="https://xxx.myshopify.com/"            # Your test store URL
 export ACCESS_TOKEN="xxx"
 export SCOPES="write_orders, read_orders, read_products"                 # Your app's required scopes
 export HOST="localhost"          # Your app's host, without the protocol prefix (in this case we used an `ngrok` tunnel to provide a secure connection to our localhost)
