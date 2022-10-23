@@ -20,7 +20,9 @@ import {
   PlutusData, 
   SpendingValidator,
   } from "lucid-cardano"; // NPM
+import { stringify } from 'querystring';
 
+  
 
   export async function getServerSideProps(context) {
     const orderId = (parseInt(context.query.id) || 0).toString();
@@ -28,7 +30,8 @@ import {
     // Default value is "0"
 
     const shop = process.env.SHOP as string;
-    const uri = "/admin/api/2022-10/orders/";
+    const token = process.env.ACCESS_TOKEN as string;
+    const uri = "admin/api/2022-10/orders/";
     const url = shop + uri + orderId + ".json";
     console.log("url", url);
 
@@ -36,7 +39,7 @@ import {
       
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'X-Shopify-Access-Token': process.env.ACCESS_TOKEN as string,
+        'X-Shopify-Access-Token': token,
         'Content-Type': 'application/json',
                  
       },
@@ -50,21 +53,25 @@ import {
         'Access-Control-Allow-Origin': '*',
         'X-CMC_PRO_API_KEY': process.env.COIN_API_KEY as string,
         'Content-Type': 'application/json',
-                
       },
       method: 'GET'
     });
 
     const adaData = await adaReq.json();
+    const adaPrice : number = adaData.data.ADA[0].quote.USD.price;
     //console.log("orderData", orderData);
     //console.log("adaData", adaData);
 
     if (!orderData.errors) {
-      const adaAmount = orderData.order.total_price / adaData.data.ADA[0].quote.USD.price
+      const adaAmount = orderData.order.total_price / adaPrice;
       const orderInfo = {
         order_id : orderData.order.id,
         total : orderData.order.total_price,
-        ada_amount : adaAmount.toFixed(2)
+        ada_amount : adaAmount.toFixed(2),
+        shop : shop,
+        access_token : token,
+        ada_usd_price : adaPrice.toFixed(5),
+
       }
       return { props: orderInfo };
 
@@ -95,9 +102,12 @@ const Home: NextPage = (props) => {
   const [API, setAPI] = useState<undefined | any>(undefined);
   const [wInfo, setWalletInfo] = useState({ balance : ''});
   const [tx, setTx] = useState({ txId : '' });
+  const [txStatus, setTxStatus] = useState({ txStatus : '' });
   const router = useRouter();
   const [orderInfo, setId] = useState<undefined | any>(props);
+  //const [shop, setShop] = useState({ shop : '' });
 
+  //const shop = process.env.SHOP as string;
 
   useEffect(() => {
     const checkWallet = async () => {
@@ -130,6 +140,55 @@ const Home: NextPage = (props) => {
     }
     updateWalletInfo();
   }, [API]);
+
+  useEffect(() => {
+    const updateOrder = async () => {
+
+        if (txStatus.txStatus == "SUBMITTED") {
+
+          const uri = "admin/api/2022-10/orders/";
+          const url = orderInfo.shop + uri + orderInfo.order_id + ".json";
+          const today = new Date();
+          console.log("Use Effect url", url);
+
+          const ada_amount : string = orderInfo.ada_amount;
+          const ada_usd_price : string = orderInfo.ada_usd_price;
+          const note_ada =  "Ada Amount = " + ada_amount;
+          const note_ada_usd = " | Ada/USD Price = " + ada_usd_price;
+          const note = note_ada + note_ada_usd;
+          const tags = "Ada Payment Status: " + txStatus.txStatus; 
+          //const tag : string = txStatus + " "+ amount +" "+ ada_usd_price + " "+ tx;
+
+          const order_update = { 
+              order : {
+                id : orderInfo.order_id,
+                tags : tags,
+                note : note,
+                note_attributes : [ { ada_amount : ada_amount,
+                                     ada_usd_price : ada_usd_price as string,
+                                     date : today,
+                                     tx : tx.txId } ]
+              }
+            }
+          
+
+          console.log("use Effect - order update", JSON.stringify(order_update));
+          const req = await fetch(url, {
+            body : JSON.stringify(order_update),
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'X-Shopify-Access-Token': orderInfo.access_token,
+              'Content-Type': 'application/json',
+                       
+            },
+            method: 'PUT'
+          });
+          const updateStatus = await req.json();
+          console.log("use effect - order update response", updateStatus);
+        }           
+    }
+    updateOrder();
+  }, [txStatus]);
 
 
   // user selects what wallet to connect to
@@ -201,6 +260,9 @@ const Home: NextPage = (props) => {
 
   const buyProduct = async () : Promise<TxHash> => {
   
+    setTxStatus({ txStatus : "SUBMITTED"});
+    
+    /*
     const api_key : string = "previewahbEiO6qnhyFm5a9Q1N55LabbIX8ZIde";
     const lucid = await Lucid.new(
       new Blockfrost("https://cardano-preview.blockfrost.io/api/v0", api_key),
@@ -235,6 +297,9 @@ const Home: NextPage = (props) => {
     console.log("txHash", txHash);
     setTx({ txId: txHash });
     return txHash;
+    
+    */
+   return "abc"
 
   } 
 
