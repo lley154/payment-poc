@@ -1,4 +1,4 @@
-# whatif
+# WhatIf
 
 ## Setting up to test the WhatIf smart contracts
 
