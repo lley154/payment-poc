@@ -1,31 +1,26 @@
 import { useState } from 'react'
 //import styles from '../styles/Home.module.css'
 
-const BuyProduct = ({ onBuyProduct } : any) => {
-
-    const [qty, setQty] = useState('')
+const BuyProduct = ({ onBuyProduct, orderInfo } : any) => {
 
     const onSubmit = (e : any) => {
         
         e.preventDefault() // prevent full page refresh
-        onBuyProduct(qty)
-    }
-    
+        onBuyProduct()
+    } 
 
     return (
 
         <form onSubmit={onSubmit}>
             <div>
-                <b>Buy Product</b>
-                <br></br>
-                <input name='qty' type='number' id='qty' placeholder='Buy Product' 
-                value={qty}
-                onChange={(e) => setQty(e.target.value)}
-                />
+                <p><b>Buy Product </b></p>
+                <p>Order ID &nbsp; &nbsp;{orderInfo.order_id}</p>
+                <p>Order Total &nbsp; &nbsp;${orderInfo.total}</p>
+                <p>ADA Amount &nbsp; &nbsp;{orderInfo.ada_amount}</p>
             </div>
-            <br/>                      
-            <input type='submit' value='Buy Product'/>
+            <input type='submit' value='Send Ada'/>
         </form>
+
     )
 }
 
