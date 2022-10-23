@@ -1,90 +1,82 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-//import Image from 'next/image'
 import styles from '../styles/Home.module.css'
 import { useState, useEffect } from "react";
 import WalletInfo from '../components/WalletInfo';
 import BuyProduct from '../components/BuyProduct';
-import { useRouter } from 'next/router';
 import { 
   Address, 
   TxHash,
-  Unit,
-  utf8ToHex,
   Blockfrost, 
   C, 
-  Constr, 
   Data,
-  Json, 
   Lucid, 
-  PlutusData, 
   SpendingValidator,
   } from "lucid-cardano"; // NPM
-import { stringify } from 'querystring';
 
   
-
   export async function getServerSideProps(context) {
     const orderId = (parseInt(context.query.id) || 0).toString();
-    // Here we got the order id query parameter from Context
-    // Default value is "0"
-
     const shop = process.env.SHOP as string;
     const token = process.env.ACCESS_TOKEN as string;
     const uri = "admin/api/2022-10/orders/";
     const url = shop + uri + orderId + ".json";
     console.log("url", url);
 
-    const req = await fetch(url,{
-      
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'X-Shopify-Access-Token': token,
-        'Content-Type': 'application/json',
-                 
-      },
-      method: 'GET'
-    });
-    const orderData = await req.json();
+    try {
+      const req = await fetch(url,{
+        
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'X-Shopify-Access-Token': token,
+          'Content-Type': 'application/json',
+                  
+        },
+        method: 'GET'
+      });
 
-    const adaUrl = "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=ADA&convert=USD";
-    const adaReq = await fetch(adaUrl, { 
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'X-CMC_PRO_API_KEY': process.env.COIN_API_KEY as string,
-        'Content-Type': 'application/json',
-      },
-      method: 'GET'
-    });
+      const orderData = await req.json();
 
-    const adaData = await adaReq.json();
-    const adaPrice : number = adaData.data.ADA[0].quote.USD.price;
-    //console.log("orderData", orderData);
-    //console.log("adaData", adaData);
+      const adaUrl = "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest?symbol=ADA&convert=USD";
+      const adaReq = await fetch(adaUrl, { 
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'X-CMC_PRO_API_KEY': process.env.COIN_API_KEY as string,
+          'Content-Type': 'application/json',
+        },
+        method: 'GET'
+      });
 
-    if (!orderData.errors) {
-      const adaAmount = orderData.order.total_price / adaPrice;
-      const orderInfo = {
-        order_id : orderData.order.id,
-        total : orderData.order.total_price,
-        ada_amount : adaAmount.toFixed(2),
-        shop : shop,
-        access_token : token,
-        ada_usd_price : adaPrice.toFixed(5),
+      const adaData = await adaReq.json();
+      const adaPrice : number = adaData.data.ADA[0].quote.USD.price;
+      //console.log("orderData", orderData);
+      //console.log("adaData", adaData);
 
+      if (!orderData.errors) {
+        const adaAmount = orderData.order.total_price / adaPrice;
+        const orderInfo = {
+          order_id : orderData.order.id,
+          total : orderData.order.total_price,
+          ada_amount : adaAmount.toFixed(2),
+          shop : shop,
+          access_token : token,
+          ada_usd_price : adaPrice.toFixed(5),
+
+        }
+        return { props: orderInfo };
+
+      } else {
+        const orderInfo = {
+          order_id : 0,
+          total : 0,
+          ada_amount : 0,
+        }
+        return { props: orderInfo };
       }
-      return { props: orderInfo };
-
-    } else {
-      const orderInfo = {
-        order_id : 0,
-        total : 0,
-        ada_amount : 0,
-      }
-      return { props: orderInfo };
-    }
+    } catch (err) {
+      console.log('getServerSideProps', err);
+    } 
   }
-
 
   const alwaysSucceedScript: SpendingValidator = {
     type: "PlutusV2",
@@ -103,11 +95,7 @@ const Home: NextPage = (props) => {
   const [wInfo, setWalletInfo] = useState({ balance : ''});
   const [tx, setTx] = useState({ txId : '' });
   const [txStatus, setTxStatus] = useState({ txStatus : '' });
-  const router = useRouter();
   const [orderInfo, setId] = useState<undefined | any>(props);
-  //const [shop, setShop] = useState({ shop : '' });
-
-  //const shop = process.env.SHOP as string;
 
   useEffect(() => {
     const checkWallet = async () => {
@@ -157,7 +145,6 @@ const Home: NextPage = (props) => {
           const note_ada_usd = " | Ada/USD Price = " + ada_usd_price;
           const note = note_ada + note_ada_usd;
           const tags = "Ada Payment Status: " + txStatus.txStatus; 
-          //const tag : string = txStatus + " "+ amount +" "+ ada_usd_price + " "+ tx;
 
           const order_update = { 
               order : {
@@ -171,7 +158,6 @@ const Home: NextPage = (props) => {
               }
             }
           
-
           console.log("use Effect - order update", JSON.stringify(order_update));
           const req = await fetch(url, {
             body : JSON.stringify(order_update),
@@ -210,26 +196,6 @@ const Home: NextPage = (props) => {
     return walletFound;
   }
 
-  /*
-  const checkIfWalletEnabled = async () => {
-
-    let walletIsEnabled = false;
-    try {
-        const walletChoice = whichWalletSelected;
-        if (walletChoice === "nami") {
-            walletIsEnabled = await window.cardano.nami.isEnabled();
-
-        } else if (walletChoice === "eternl") {
-            walletIsEnabled = await window.cardano.eternl.isEnabled();
-    
-        } 
-    } catch (err) {
-        console.log('checkIfWalletEnabled error', err);
-    }
-    return walletIsEnabled;
-  }
-*/
-
   const enableWallet = async () => {
 
     let walletAPI = undefined;
@@ -260,9 +226,6 @@ const Home: NextPage = (props) => {
 
   const buyProduct = async () : Promise<TxHash> => {
   
-    setTxStatus({ txStatus : "SUBMITTED"});
-    
-    /*
     const api_key : string = "previewahbEiO6qnhyFm5a9Q1N55LabbIX8ZIde";
     const lucid = await Lucid.new(
       new Blockfrost("https://cardano-preview.blockfrost.io/api/v0", api_key),
@@ -274,7 +237,9 @@ const Home: NextPage = (props) => {
     const alwaysSucceedAddress: Address = lucid.utils.validatorToAddress(
       alwaysSucceedScript,
     );
+    console.log("alwaysSucceedAddress", alwaysSucceedAddress);
 
+    /*
     const referenceScriptUtxo = (await lucid.utxosAt(alwaysSucceedAddress)).find(
       (utxo) => Boolean(utxo.scriptRef),
     );
@@ -284,25 +249,42 @@ const Home: NextPage = (props) => {
       utxo.datum === Datum() && !utxo.scriptRef
     );
     if (!utxo) throw new Error("Spending script utxo not found");
-  
+    */
+    
+    const tx = await lucid
+    .newTx()
+    .payToContract(alwaysSucceedAddress, { inline: Datum() }, { ["lovelace"] : BigInt(10000000)})
+    .payToContract(alwaysSucceedAddress, {
+      asHash: Datum(),
+      scriptRef: alwaysSucceedScript, // adding plutusV2 script to output
+    }, {})
+    .complete();
+
+
+    /*
     const tx = await lucid
       .newTx()
       .collectFrom([utxo], Redeemer())
       .attachSpendingValidator(alwaysSucceedScript)
       .complete();
-  
+    */
+
+    /*
+    const tx = await lucid
+    .newTx()
+    .readFrom([referenceScriptUtxo]) // spending utxo by reading plutusV2 from reference utxo
+    .collectFrom([utxo], Redeemer())
+    .complete();
+    */
+
     const signedTx = await tx.sign().complete();
   
     const txHash = await signedTx.submit();
     console.log("txHash", txHash);
     setTx({ txId: txHash });
+    setTxStatus({txStatus : "SUBMITTED"});
     return txHash;
-    
-    */
-   return "abc"
-
   } 
-
 
   return (
     <div className={styles.container}>
@@ -331,7 +313,6 @@ const Home: NextPage = (props) => {
               <label>Nami</label>
           </p>
         </div>
-          {walletIsEnabled && <div className={styles.border}><WalletInfo walletInfo={wInfo}/></div>}
           {tx.txId && <div className={styles.border}><b>Transaction Success!!!</b>
           <p>TxId &nbsp;&nbsp;<a href={"https://preview.cexplorer.io/tx/" + tx.txId} target="_blank" rel="noopener noreferrer" >{tx.txId}</a></p>
           <p>Please wait until the transaction is confirmed on the blockchain and reload this page before doing another transaction</p>
@@ -347,8 +328,5 @@ const Home: NextPage = (props) => {
     
   )
 }
-
-
-
 
 export default Home
