@@ -13,7 +13,12 @@ import {
   C, 
   Data,
   Lucid, 
+  MintingPolicy,
+  PolicyId,
   SpendingValidator,
+  Unit,
+  utf8ToHex,
+  UTxO,
   } from "lucid-cardano"; // NPM
 
   
@@ -55,7 +60,7 @@ import {
       //console.log("adaData", adaData);
 
       if (!orderData.errors) {
-        const adaAmount = orderData.order.total_price / adaPrice + 1.25; // adding 1.25 Ada to include tx fees
+        const adaAmount = orderData.order.total_price / adaPrice; // adding 1.25 Ada to include tx fees
         const orderInfo = {
           order_id : orderData.order.id,
           total : orderData.order.total_price,
@@ -80,15 +85,6 @@ import {
     } 
     return { props: orderInfo };
   }
-
-
-  const alwaysSucceedScript: SpendingValidator = {
-    type: "PlutusV2",
-    script: "49480100002221200101",
-  };
-  
-  const Datum = () => Data.empty();
-  const Redeemer = () => Data.empty();
 
 
 const Home: NextPage = (props) => {
@@ -237,57 +233,58 @@ const Home: NextPage = (props) => {
   
     lucid.selectWallet(API);
 
-    const alwaysSucceedAddress: Address = lucid.utils.validatorToAddress(
-      alwaysSucceedScript,
+    const { paymentCredential } = lucid.utils.getAddressDetails(
+      await lucid.wallet.address(),
     );
-    console.log("alwaysSucceedAddress", alwaysSucceedAddress);
 
-    /*
-    const referenceScriptUtxo = (await lucid.utxosAt(alwaysSucceedAddress)).find(
-      (utxo) => Boolean(utxo.scriptRef),
-    );
-    if (!referenceScriptUtxo) throw new Error("Reference script not found");
-  
-    const utxo = (await lucid.utxosAt(alwaysSucceedAddress)).find((utxo) =>
-      utxo.datum === Datum() && !utxo.scriptRef
-    );
-    if (!utxo) throw new Error("Spending script utxo not found");
-    */
+    const address = await lucid.wallet.address();
+    console.log("address", address);
     
-    const tx = await lucid
-    .newTx()
-    .payToContract(alwaysSucceedAddress, { inline: Datum() }, { ["lovelace"] : BigInt((orderInfo.ada_amount - 1.25 ) * 1000000)}) // remove 1 Ada for tx fee
-    .payToContract(alwaysSucceedAddress, {
-      asHash: Datum(),
-      scriptRef: alwaysSucceedScript, // adding plutusV2 script to output
-    }, {})
-    .complete();
+    const mintingPolicy: MintingPolicy = lucid.utils.nativeScriptFromJson(
+      {
+        type: "all",
+        scripts: [
+          { type: "sig", keyHash: paymentCredential?.hash! },
+          {
+            type: "before",
+            slot: lucid.utils.unixTimeToSlot(Date.now() + 1000000),
+          },
+        ],
+      },
+    );
+
+    const policyId: PolicyId = lucid.utils.mintingPolicyToId(
+      mintingPolicy,
+    );
+   
+    const unit: Unit = policyId + utf8ToHex("POC Token");
+
+    const utxos = await lucid.wallet.getUtxos(); 
+    const whatIfAmount = (BigInt((orderInfo.ada_amount) * 1000000 * 95) / BigInt(100));
+    const pondAmount = (BigInt((orderInfo.ada_amount) * 1000000 * 5) / BigInt(100));
+    console.log("whatIfAmount", whatIfAmount);
+    console.log("pondAmount", pondAmount);
 
 
-    /*
     const tx = await lucid
       .newTx()
-      .collectFrom([utxo], Redeemer())
-      .attachSpendingValidator(alwaysSucceedScript)
+      .collectFrom(utxos)
+      .payToAddress("addr_test1qrq7f2sx7ql29asr7wuwfrda0ehd3k5guc0n4kz5m5dr9sat865yd3c5vhydm642lre7cqxfnrwlj5y34gwrgpf67usqtzvujx", { ["lovelace"] : whatIfAmount })  // remove 1.25 for tx fee
+      .payToAddress("addr_test1qqmx9nrlx5em7qskaa7j0973lxd4uhkxgzxj3uly266yen79f0daj03pwf25csqw62g08rkg4r9yp64n3vrpnk6fl4rsprt4uz", { ["lovelace"] : pondAmount }) // remove 1.25 for tx fee
+      .mintAssets({ [unit]: BigInt(1) })
+      .validTo(Date.now() + 100000)
+      .attachMintingPolicy(mintingPolicy)   
       .complete();
-    */
-
-    /*
-    const tx = await lucid
-    .newTx()
-    .readFrom([referenceScriptUtxo]) // spending utxo by reading plutusV2 from reference utxo
-    .collectFrom([utxo], Redeemer())
-    .complete();
-    */
-
+  
     const signedTx = await tx.sign().complete();
   
     const txHash = await signedTx.submit();
+  
     console.log("txHash", txHash);
     setTx({ txId: txHash });
     setTxStatus({txStatus : "SUBMITTED"});
     return txHash;
-  } 
+  }; 
 
   return (
     <div className={styles.container}>
