@@ -263,12 +263,19 @@ const Home: NextPage = (props) => {
     const unit: Unit = policyId + tokenName;
     const now = new Date();
 
-    const metaData : Json = {
+    const orderDetails : Json = {
       "version": "1.0",
       "order_id":  orderInfo.order_id,
       "date": now, 
-     "ada_amount": orderInfo.ada_amount
+      "ada_amount": orderInfo.ada_amount
     };
+
+    
+
+    const metaData : Json = {
+      "order_details" : orderDetails,
+      "signature" : orderSig
+    }
 
     const tx = await lucid
       .newTx()
