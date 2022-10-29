@@ -1,6 +1,6 @@
-# WhatIf
+# Payment POC
 
-## Setting up to test the WhatIf smart contracts
+## Setting up to test the traceability smart contracts
 
 Please add the following to your ~/.bashrc file
 ```
