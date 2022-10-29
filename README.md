@@ -17,9 +17,7 @@ Install npm dependancies
 ```
 sudo npm install --global yarn
 cd littercoin/app
-[whatif/app]$ npm install react next react-router react-dom
-[whaif/app]$ npm install create-next-app
-[whatif/app]$ npm install lucid-cardano
+[whatif/app]$ npm install 
 [whatif/app]$ yarn dev
 yarn run v1.22.19
 $ next dev
