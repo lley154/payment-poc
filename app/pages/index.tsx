@@ -6,14 +6,20 @@ import WalletInfo from '../components/WalletInfo';
 import BuyProduct from '../components/BuyProduct';
 
 
+
 import { 
   Address, 
   TxHash,
   Blockfrost, 
   C, 
   Data,
+  Json, 
   Lucid, 
+  MintingPolicy,
+  PolicyId,
   SpendingValidator,
+  Unit,
+  utf8ToHex,
   } from "lucid-cardano"; // NPM
 
   
@@ -57,7 +63,7 @@ import {
       if (!orderData.errors) {
         const adaAmount = orderData.order.total_price / adaPrice + 1.25; // adding 1.25 Ada to include tx fees
         const orderInfo = {
-          order_id : orderData.order.id,
+          order_id : orderData.order.id as string,
           total : orderData.order.total_price,
           ada_amount : adaAmount.toFixed(2),
           shop : shop,
@@ -69,7 +75,7 @@ import {
 
       } else {
         const orderInfo = {
-          order_id : 0,
+          order_id : "0",
           total : 0,
           ada_amount : 0,
         }
@@ -78,17 +84,12 @@ import {
     } catch (err) {
       console.log('getServerSideProps', err);
     } 
-    return { props: orderInfo };
+    return { props: undefined };
   }
 
 
-  const alwaysSucceedScript: SpendingValidator = {
-    type: "PlutusV2",
-    script: "49480100002221200101",
-  };
-  
-  const Datum = () => Data.empty();
-  const Redeemer = () => Data.empty();
+const Datum = () => Data.empty();
+const Redeemer = () => Data.empty();
 
 
 const Home: NextPage = (props) => {
@@ -237,48 +238,45 @@ const Home: NextPage = (props) => {
   
     lucid.selectWallet(API);
 
-    const alwaysSucceedAddress: Address = lucid.utils.validatorToAddress(
-      alwaysSucceedScript,
+    const { paymentCredential } = lucid.utils.getAddressDetails(
+      await lucid.wallet.address(),
     );
-    console.log("alwaysSucceedAddress", alwaysSucceedAddress);
 
-    /*
-    const referenceScriptUtxo = (await lucid.utxosAt(alwaysSucceedAddress)).find(
-      (utxo) => Boolean(utxo.scriptRef),
+    const mintingPolicy: MintingPolicy = lucid.utils.nativeScriptFromJson(
+      {
+        type: "all",
+        scripts: [
+          { type: "sig", keyHash: paymentCredential?.hash! },
+          {
+            type: "before",
+            slot: lucid.utils.unixTimeToSlot(Date.now() + 1000000),
+          },
+        ],
+      },
     );
-    if (!referenceScriptUtxo) throw new Error("Reference script not found");
-  
-    const utxo = (await lucid.utxosAt(alwaysSucceedAddress)).find((utxo) =>
-      utxo.datum === Datum() && !utxo.scriptRef
-    );
-    if (!utxo) throw new Error("Spending script utxo not found");
-    */
     
-    const tx = await lucid
-    .newTx()
-    .payToContract(alwaysSucceedAddress, { inline: Datum() }, { ["lovelace"] : BigInt((orderInfo.ada_amount - 1.25 ) * 1000000)}) // remove 1 Ada for tx fee
-    .payToContract(alwaysSucceedAddress, {
-      asHash: Datum(),
-      scriptRef: alwaysSucceedScript, // adding plutusV2 script to output
-    }, {})
-    .complete();
+    const policyId: PolicyId = lucid.utils.mintingPolicyToId(
+      mintingPolicy,
+    );
 
+    const tokenName = utf8ToHex(orderInfo.order_id);
+    const unit: Unit = policyId + tokenName;
+    const now = new Date();
 
-    /*
+    const metaData : Json = {
+      "version": "1.0",
+      "order_id":  orderInfo.order_id,
+      "date": now, 
+     "ada_amount": orderInfo.ada_amount
+    };
+
     const tx = await lucid
       .newTx()
-      .collectFrom([utxo], Redeemer())
-      .attachSpendingValidator(alwaysSucceedScript)
+      .mintAssets({ [unit]: BigInt(1) })
+      .validTo(Date.now() + 100000)
+      .attachMintingPolicy(mintingPolicy)
+      .attachMetadata(1, metaData)
       .complete();
-    */
-
-    /*
-    const tx = await lucid
-    .newTx()
-    .readFrom([referenceScriptUtxo]) // spending utxo by reading plutusV2 from reference utxo
-    .collectFrom([utxo], Redeemer())
-    .complete();
-    */
 
     const signedTx = await tx.sign().complete();
   
