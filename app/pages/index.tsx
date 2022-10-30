@@ -287,13 +287,10 @@ const Home: NextPage = (props) => {
     const donorAmount = lovelaceAmount * 5 / 100
 
     const policyId = lucid.utils.mintingPolicyToId(mintingPolicy);
-    const name: string = "123";
-    const unit: Unit = policyId + utf8ToHex(name);
-    //const addr : string = lucid.utils.getAddressDetails(nftAddress.address).address.bech32
+    const unit: Unit = policyId + utf8ToHex(orderInfo.order_id);
     const qty = BigInt(1);  // only 1 NFT token
     const adminAddr = await lucid.wallet.address();
-    //const mintRedeemer = Data.to(new Constr(0, [new Constr(1, []),BigInt(0),BigInt(0)]));
-    const mintRedeemer = Data.to(new Constr(0, [new Constr(1, []),utf8ToHex("123"), BigInt(lovelaceAmount)]));
+    const mintRedeemer = Data.to(new Constr(0, [new Constr(1, []),utf8ToHex(orderInfo.order_id), BigInt(lovelaceAmount)]));
 
     const tx = await lucid
       .newTx()
@@ -301,7 +298,6 @@ const Home: NextPage = (props) => {
       .attachMintingPolicy(mintingPolicy)
       .payToAddress(merchantAddress, { ["lovelace"] : BigInt(merchantAmount.toFixed(0)) }) 
       .payToAddress(donorAddress, { ["lovelace"] : BigInt(donorAmount.toFixed(0)) })
-      .addSigner(adminAddr)
       .complete();
 
     const signedTx = await tx.sign().complete();
