@@ -10,9 +10,8 @@
   },
   "dependencies": {
     "body-parser": "^1.20.1",
-    "cardano-signer": "file:../../cardano-signer/src",
     "create-next-app": "^12.3.1",
-    "lucid-cardano": "^0.6.6",
+    "lucid-cardano": "0.6.6",
     "next": "^12.3.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
