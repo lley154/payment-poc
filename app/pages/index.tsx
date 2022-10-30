@@ -5,8 +5,6 @@ import { useState, useEffect } from "react";
 import WalletInfo from '../components/WalletInfo';
 import BuyProduct from '../components/BuyProduct';
 
-
-
 import { 
   Address, 
   TxHash,
@@ -32,6 +30,21 @@ import {
     console.log("url", url);
 
     try {
+
+      // get metadata signature
+      /*
+    const req = await fetch(url, {
+      body : JSON.stringify(order_update),
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'X-Shopify-Access-Token': orderInfo.access_token,
+        'Content-Type': 'application/json',
+                 
+      },
+      method: 'PUT'
+    });
+ */
+
       const req = await fetch(url,{
         
         headers: {
@@ -270,11 +283,9 @@ const Home: NextPage = (props) => {
       "ada_amount": orderInfo.ada_amount
     };
 
-    
-
     const metaData : Json = {
       "order_details" : orderDetails,
-      "signature" : orderSig
+      "signature" : signature
     }
 
     const tx = await lucid
