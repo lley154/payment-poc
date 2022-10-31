@@ -246,10 +246,11 @@ const Home: NextPage = (props) => {
     
     const orderDetails : Json = {
       "version": "1.0",   
-      "ada_amount": (donorAmount / 1000000).toLocaleString(),
+      "donation_ada_amount": (donorAmount / 1000000).toLocaleString(),
+      "total_ada_amount": (lovelaceAmount / 1000000).toLocaleString(),
+      "donation_split" : (100 - split),
       "date": now, 
-      "order_id":  orderInfo.order_id,
-   
+      "order_id":  orderInfo.order_id,  
     };
 
     const metaData : Json = {
