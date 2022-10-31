@@ -220,8 +220,8 @@ const Home: NextPage = (props) => {
     // ----------------------------------------------------------------------
     // Move these to env variables
     // ----------------------------------------------------------------------
-    const nftMintAddr : string = "addr_test1wq6rpugw0sh4w465w337uakgtet89dmp0qjyt934p9lnd4syz9x5w"; // minting policy address
-    const policyId = "3430f10e7c2f5757547463ee76c85e5672b7617824459635097f36d6";
+    const nftMintAddr : string = "addr_test1wrlxmzmzqeux22sx0h4wu309dzk8yvsy22qe32dk4x503agq8gc05"; // minting policy address
+    const policyId = "fe6d8b620678652a067deaee45e568ac723204528198a9b6a9a8f8f5";
     const split = 95;
     const merchantAddress = "addr_test1vq7k907l7e59t52skm8e0ezsnmmc7h4xy30kg2klwc5n8rqug2pds"; 
     const donorAddress = "addr_test1vzetpfww4aaunft0ucvcrxugj8nt4lhltsktya0rx0uh48cqghjfg";
@@ -239,9 +239,9 @@ const Home: NextPage = (props) => {
     const lovelaceAmount = (orderInfo.ada_amount - 1.25) * 1000000
     const merchantAmount = lovelaceAmount * split / 100
     const donorAmount = lovelaceAmount * (100 - split) / 100
-    const unit: Unit = policyId + utf8ToHex(orderInfo.order_id);
+    const unit: Unit = policyId + utf8ToHex("EarthTrust");
     const qty = BigInt(1);  // only 1 NFT token
-    const mintRedeemer = Data.to(new Constr(0, [new Constr(1, []),utf8ToHex(orderInfo.order_id), BigInt(lovelaceAmount.toFixed(0))]));
+    const mintRedeemer = Data.to(new Constr(0, [new Constr(1, []), BigInt(lovelaceAmount.toFixed(0))]));
     const now = new Date();
     
     const orderDetails : Json = {
