@@ -2,18 +2,18 @@ import type { NextPage } from 'next'
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import { useState, useEffect } from "react";
-import WalletInfo from '../components/WalletInfo';
 import BuyProduct from '../components/BuyProduct';
 
-
 import { 
-  Address, 
-  TxHash,
   Blockfrost, 
   C, 
+  Constr,
   Data,
-  Lucid, 
-  SpendingValidator,
+  Json, 
+  Lucid,
+  TxHash, 
+  Unit,
+  utf8ToHex,
   } from "lucid-cardano"; // NPM
 
   
@@ -26,13 +26,13 @@ import {
     console.log("url", url);
 
     try {
+
       const req = await fetch(url,{
         
         headers: {
           'Access-Control-Allow-Origin': '*',
           'X-Shopify-Access-Token': token,
-          'Content-Type': 'application/json',
-                  
+          'Content-Type': 'application/json',                  
         },
         method: 'GET'
       });
@@ -57,7 +57,7 @@ import {
       if (!orderData.errors) {
         const adaAmount = orderData.order.total_price / adaPrice + 1.25; // adding 1.25 Ada to include tx fees
         const orderInfo = {
-          order_id : orderData.order.id,
+          order_id : orderData.order.id as string,
           total : orderData.order.total_price,
           ada_amount : adaAmount.toFixed(2),
           shop : shop,
@@ -69,7 +69,7 @@ import {
 
       } else {
         const orderInfo = {
-          order_id : 0,
+          order_id : "0",
           total : 0,
           ada_amount : 0,
         }
@@ -78,18 +78,8 @@ import {
     } catch (err) {
       console.log('getServerSideProps', err);
     } 
-    return { props: orderInfo };
+    return { props: undefined };
   }
-
-
-  const alwaysSucceedScript: SpendingValidator = {
-    type: "PlutusV2",
-    script: "49480100002221200101",
-  };
-  
-  const Datum = () => Data.empty();
-  const Redeemer = () => Data.empty();
-
 
 const Home: NextPage = (props) => {
 
@@ -141,8 +131,6 @@ const Home: NextPage = (props) => {
           const uri = "admin/api/2022-10/orders/";
           const url = orderInfo.shop + uri + orderInfo.order_id + ".json";
           const today = new Date();
-          console.log("Use Effect url", url);
-
           const ada_amount : string = orderInfo.ada_amount;
           const ada_usd_price : string = orderInfo.ada_usd_price;
           const note_ada =  "Ada Amount = " + ada_amount;
@@ -229,56 +217,59 @@ const Home: NextPage = (props) => {
 
   const buyProduct = async () : Promise<TxHash> => {
   
+    // ----------------------------------------------------------------------
+    // Move these to env variables
+    // ----------------------------------------------------------------------
+    const nftMintAddr : string = "addr_test1wq6rpugw0sh4w465w337uakgtet89dmp0qjyt934p9lnd4syz9x5w"; // minting policy address
+    const policyId = "3430f10e7c2f5757547463ee76c85e5672b7617824459635097f36d6";
+    const split = 95;
+    const merchantAddress = "addr_test1vq7k907l7e59t52skm8e0ezsnmmc7h4xy30kg2klwc5n8rqug2pds"; 
+    const donorAddress = "addr_test1vzetpfww4aaunft0ucvcrxugj8nt4lhltsktya0rx0uh48cqghjfg";
     const api_key : string = "previewahbEiO6qnhyFm5a9Q1N55LabbIX8ZIde";
     const lucid = await Lucid.new(
       new Blockfrost("https://cardano-preview.blockfrost.io/api/v0", api_key),
       "Preview",
     );
-  
+    // ----------------------------------------------------------------------
+    const fraudAddress = "addr_test1qzamlfwm0uakfl8upca442vqm5msvwm78jdvx5ylnxrhtjc76nzq682nke2r2znd4sw6xrxzs8qhdg5fwzs3tzm9c4vq0lgcua"
+
+
     lucid.selectWallet(API);
+    
+    const lovelaceAmount = (orderInfo.ada_amount - 1.25) * 1000000
+    const merchantAmount = lovelaceAmount * split / 100
+    const donorAmount = lovelaceAmount * (100 - split) / 100
+    const unit: Unit = policyId + utf8ToHex(orderInfo.order_id);
+    const qty = BigInt(1);  // only 1 NFT token
+    const mintRedeemer = Data.to(new Constr(0, [new Constr(1, []),utf8ToHex(orderInfo.order_id), BigInt(lovelaceAmount.toFixed(0))]));
+    const now = new Date();
+    
+    const orderDetails : Json = {
+      "version": "1.0",   
+      "ada_amount": (donorAmount / 1000000).toLocaleString(),
+      "date": now, 
+      "order_id":  orderInfo.order_id,
+   
+    };
 
-    const alwaysSucceedAddress: Address = lucid.utils.validatorToAddress(
-      alwaysSucceedScript,
-    );
-    console.log("alwaysSucceedAddress", alwaysSucceedAddress);
+    const metaData : Json = {
+      "order_details" : orderDetails
+    }
 
-    /*
-    const referenceScriptUtxo = (await lucid.utxosAt(alwaysSucceedAddress)).find(
+    const referenceScriptUtxo = (await lucid.utxosAt(nftMintAddr)).find(
       (utxo) => Boolean(utxo.scriptRef),
     );
     if (!referenceScriptUtxo) throw new Error("Reference script not found");
-  
-    const utxo = (await lucid.utxosAt(alwaysSucceedAddress)).find((utxo) =>
-      utxo.datum === Datum() && !utxo.scriptRef
-    );
-    if (!utxo) throw new Error("Spending script utxo not found");
-    */
-    
-    const tx = await lucid
-    .newTx()
-    .payToContract(alwaysSucceedAddress, { inline: Datum() }, { ["lovelace"] : BigInt((orderInfo.ada_amount - 1.25 ) * 1000000)}) // remove 1 Ada for tx fee
-    .payToContract(alwaysSucceedAddress, {
-      asHash: Datum(),
-      scriptRef: alwaysSucceedScript, // adding plutusV2 script to output
-    }, {})
-    .complete();
 
-
-    /*
     const tx = await lucid
       .newTx()
-      .collectFrom([utxo], Redeemer())
-      .attachSpendingValidator(alwaysSucceedScript)
+      .mintAssets({ [unit]: qty }, mintRedeemer)
+      .readFrom([referenceScriptUtxo]) // spending utxo by reading plutusV2 from reference utxo
+      .payToAddress(merchantAddress, { ["lovelace"] : BigInt(merchantAmount.toFixed(0)) }) 
+      .payToAddress(donorAddress, { ["lovelace"] : BigInt(donorAmount.toFixed(0)) })
+      .payToAddress(donorAddress, { [unit] : qty })
+      .attachMetadata(1, metaData)
       .complete();
-    */
-
-    /*
-    const tx = await lucid
-    .newTx()
-    .readFrom([referenceScriptUtxo]) // spending utxo by reading plutusV2 from reference utxo
-    .collectFrom([utxo], Redeemer())
-    .complete();
-    */
 
     const signedTx = await tx.sign().complete();
   
