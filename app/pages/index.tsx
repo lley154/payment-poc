@@ -225,6 +225,7 @@ const Home: NextPage = (props) => {
     const split = 95;
     const merchantAddress = "addr_test1vq7k907l7e59t52skm8e0ezsnmmc7h4xy30kg2klwc5n8rqug2pds"; 
     const donorAddress = "addr_test1vzetpfww4aaunft0ucvcrxugj8nt4lhltsktya0rx0uh48cqghjfg";
+    const earthtrustAddress = "addr_test1qpjczgc53l08pnhhu84pjh02upufmxssxed55a7uhglkjp7g3ns2lgmlklhgsqrdq9hev3yah98ntex77rpmkdrzr20s7jh45c";
     const api_key : string = "previewahbEiO6qnhyFm5a9Q1N55LabbIX8ZIde";
     const lucid = await Lucid.new(
       new Blockfrost("https://cardano-preview.blockfrost.io/api/v0", api_key),
@@ -268,7 +269,7 @@ const Home: NextPage = (props) => {
       .readFrom([referenceScriptUtxo]) // spending utxo by reading plutusV2 from reference utxo
       .payToAddress(merchantAddress, { ["lovelace"] : BigInt(merchantAmount.toFixed(0)) }) 
       .payToAddress(donorAddress, { ["lovelace"] : BigInt(donorAmount.toFixed(0)) })
-      .payToAddress(donorAddress, { [unit] : qty })
+      .payToAddress(earthtrustAddress, { [unit] : qty })
       .attachMetadata(1, metaData)
       .complete();
 
