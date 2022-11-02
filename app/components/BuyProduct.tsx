@@ -1,6 +1,3 @@
-import { useState } from 'react'
-//import styles from '../styles/Home.module.css'
-
 const BuyProduct = ({ onBuyProduct, orderInfo } : any) => {
 
     const onSubmit = (e : any) => {
