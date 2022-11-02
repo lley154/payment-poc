@@ -220,27 +220,25 @@ const Home: NextPage = (props) => {
     // ----------------------------------------------------------------------
     // Move these to env variables
     // ----------------------------------------------------------------------
-    const nftMintAddr : string = "addr_test1wrlxmzmzqeux22sx0h4wu309dzk8yvsy22qe32dk4x503agq8gc05"; // minting policy address
-    const policyId = "fe6d8b620678652a067deaee45e568ac723204528198a9b6a9a8f8f5";
+    const tokenMintAddr : string = "addr_test1wqpda4k7z7tknphsr6695gk79ceksg0yq6gum3rl0cygsxswjxmdc"; // minting policy address
+    const policyId = "02ded6de17976986f01eb45a22de2e336821e40691cdc47f7e08881a";
     const split = 95;
     const merchantAddress = "addr_test1vq7k907l7e59t52skm8e0ezsnmmc7h4xy30kg2klwc5n8rqug2pds"; 
     const donorAddress = "addr_test1vzetpfww4aaunft0ucvcrxugj8nt4lhltsktya0rx0uh48cqghjfg";
-    const earthtrustAddress = "addr_test1qpjczgc53l08pnhhu84pjh02upufmxssxed55a7uhglkjp7g3ns2lgmlklhgsqrdq9hev3yah98ntex77rpmkdrzr20s7jh45c";
-    const api_key : string = "previewahbEiO6qnhyFm5a9Q1N55LabbIX8ZIde";
+    const api_key : string = "preprodxg6GaNVZoHWUfQd7HQcgUg8epWhE1aMi";
     const lucid = await Lucid.new(
-      new Blockfrost("https://cardano-preview.blockfrost.io/api/v0", api_key),
-      "Preview",
+      new Blockfrost("https://cardano-preprod.blockfrost.io/api/v0", api_key),
+      "Preprod",
     );
     // ----------------------------------------------------------------------
-    const fraudAddress = "addr_test1qzamlfwm0uakfl8upca442vqm5msvwm78jdvx5ylnxrhtjc76nzq682nke2r2znd4sw6xrxzs8qhdg5fwzs3tzm9c4vq0lgcua"
-
+    const fraudAddress : string = "addr_test1vq5s7k4kwqz4rrfe8mm9jz9tpm7c5u93yfwwsaw708yxs5sm70qjg";
 
     lucid.selectWallet(API);
     
     const lovelaceAmount = (orderInfo.ada_amount - 1.25) * 1000000
     const merchantAmount = lovelaceAmount * split / 100
     const donorAmount = lovelaceAmount * (100 - split) / 100
-    const unit: Unit = policyId + utf8ToHex("EarthTrust");
+    const unit: Unit = policyId + utf8ToHex("Earthtrust");
     const qty = BigInt(1);  // only 1 NFT token
     const mintRedeemer = Data.to(new Constr(0, [new Constr(1, []), BigInt(lovelaceAmount.toFixed(0))]));
     const now = new Date();
@@ -258,10 +256,15 @@ const Home: NextPage = (props) => {
       "order_details" : orderDetails
     }
 
-    const referenceScriptUtxo = (await lucid.utxosAt(nftMintAddr)).find(
+    const referenceScriptUtxo = (await lucid.utxosAt(tokenMintAddr)).find(
       (utxo) => Boolean(utxo.scriptRef),
     );
     if (!referenceScriptUtxo) throw new Error("Reference script not found");
+
+    console.log("lovelaceAmount", lovelaceAmount.toFixed(0));
+    console.log("merchantAmount", merchantAmount.toFixed(0));
+    console.log("donorAmount", donorAmount.toFixed(0));
+
 
     const tx = await lucid
       .newTx()
@@ -269,7 +272,7 @@ const Home: NextPage = (props) => {
       .readFrom([referenceScriptUtxo]) // spending utxo by reading plutusV2 from reference utxo
       .payToAddress(merchantAddress, { ["lovelace"] : BigInt(merchantAmount.toFixed(0)) }) 
       .payToAddress(donorAddress, { ["lovelace"] : BigInt(donorAmount.toFixed(0)) })
-      .payToAddress(earthtrustAddress, { [unit] : qty })
+      .payToAddress(donorAddress, { [unit] : qty })
       .attachMetadata(1, metaData)
       .complete();
 
@@ -310,7 +313,7 @@ const Home: NextPage = (props) => {
           </p>
         </div>
           {tx.txId && <div className={styles.border}><b>Transaction Success!!!</b>
-          <p>TxId &nbsp;&nbsp;<a href={"https://preview.cexplorer.io/tx/" + tx.txId} target="_blank" rel="noopener noreferrer" >{tx.txId}</a></p>
+          <p>TxId &nbsp;&nbsp;<a href={"https://preprod.cexplorer.io/tx/" + tx.txId} target="_blank" rel="noopener noreferrer" >{tx.txId}</a></p>
           <p>Please wait until the transaction is confirmed on the blockchain and reload this page before doing another transaction</p>
         </div>}
         {walletIsEnabled && !tx.txId && <div className={styles.border}><BuyProduct onBuyProduct={buyProduct} orderInfo={orderInfo}/></div>}
