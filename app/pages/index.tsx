@@ -240,7 +240,7 @@ const Home: NextPage = (props) => {
       "Preprod",
     );
 
-    const earthtrustValidatorAddress = "addr_test1wzfylzh6f3h49v7weu4kr00ee6dgj2yy2k8l6ydfzdv0u0sfjpaxj";
+    const earthtrustValidatorAddress = "addr_test1wp98u3s8wjrfxpjlerzlw2wg9a6k5ws8cc25gadtcxfe7xs6g8lm9";
 
     // ----------------------------------------------------------------------
 
@@ -251,25 +251,27 @@ const Home: NextPage = (props) => {
     //);
 
 
-    const { paymentCredential } = lucid.utils.getAddressDetails(
+    const { paymentCredential, address } = lucid.utils.getAddressDetails(
       await lucid.wallet.address(),
     );
     const refundPkh = paymentCredential?.hash as string;
+    const refundAddr = address.bech32;
     const lovelaceAmount = (orderInfo.ada_amount) * 1000000
+
+    console.log("paymentCredential", paymentCredential);
+    console.log("refundPkh", refundPkh);
+    console.log("refundAddr", refundAddr);
+    
  
     /*
      Datum {
       order_amount : int
       order_info : string
-      service_fee : int
-      refund_pkh : string
      }
     */
 
     const newDatum = Data.to(new Constr(0, [BigInt(lovelaceAmount - serviceFee), 
-                                            utf8ToHex(orderInfo.order_id),
-                                            BigInt(serviceFee),
-                                            refundPkh]));
+                                            utf8ToHex(orderInfo.order_id)]));
 
     const tx = await lucid
       .newTx()
