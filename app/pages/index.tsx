@@ -240,7 +240,7 @@ const Home: NextPage = (props) => {
       "Preprod",
     );
 
-    const earthtrustValidatorAddress = "addr_test1wzetwau034znxxqlfdqph57w96dznktf8v86a8w4263lfnqph0y2k";
+    const earthtrustValidatorAddress = "addr_test1wp98u3s8wjrfxpjlerzlw2wg9a6k5ws8cc25gadtcxfe7xs6g8lm9";
 
     // ----------------------------------------------------------------------
 
