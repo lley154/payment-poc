@@ -16,7 +16,7 @@ import {
   } from "lucid-cardano"; // NPM
 
   
-  export async function getServerSideProps(context) {
+  export async function getServerSideProps(context : any) {
   
     // set in env variables
     const orderId = (parseInt(context.query.id) || 0).toString();
