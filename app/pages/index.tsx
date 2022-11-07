@@ -20,8 +20,8 @@ import {
   
     // set in env variables
     const orderId = (parseInt(context.query.id) || 0).toString();
-    const shop = process.env.SHOP as string;
-    const token = process.env.ACCESS_TOKEN as string;
+    const shop = process.env.NEXT_PUBLIC_SHOP as string;
+    const token = process.env.NEXT_PUBLIC_ACCESS_TOKEN as string;
     const uri = "admin/api/2022-10/orders/";
     const url = shop + uri + orderId + ".json";
     const serviceFee = 500000  // in lovelace
@@ -47,7 +47,7 @@ import {
       const adaReq = await fetch(adaUrl, { 
         headers: {
           'Access-Control-Allow-Origin': '*',
-          'X-CMC_PRO_API_KEY': process.env.COIN_API_KEY as string,
+          'X-CMC_PRO_API_KEY': process.env.NEXT_PUBLIC_COIN_API_KEY as string,
           'Content-Type': 'application/json',
         },
         method: 'GET'
