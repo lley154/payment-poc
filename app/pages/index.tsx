@@ -3,19 +3,15 @@ import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import { useState, useEffect } from "react";
 import BuyProduct from '../components/BuyProduct';
-import AddScript from '../components/AddScript';
 
 import { 
-  Address,
   Blockfrost, 
   C, 
   Constr,
   Data,
-  Json, 
   Lucid,
   SpendingValidator,
   TxHash, 
-  Unit,
   utf8ToHex,
   } from "lucid-cardano"; // NPM
 
@@ -287,43 +283,6 @@ const Home: NextPage = (props) => {
     return txHash;
   } 
 
-  const addScript = async () : Promise<TxHash> => {
-
-    // ----------------------------------------------------------------------
-    // Move these to env variables
-    // ----------------------------------------------------------------------
-    const api_key : string = "preprodxg6GaNVZoHWUfQd7HQcgUg8epWhE1aMi";
-    const lucid = await Lucid.new(
-      new Blockfrost("https://cardano-preprod.blockfrost.io/api/v0", api_key),
-      "Preprod",
-    );
-    // ----------------------------------------------------------------------
-
-    lucid.selectWallet(API);
-
-    const earthtrustValidatorAddress: Address = lucid.utils.validatorToAddress(
-      earthtrustValidatorScript,
-    );
-
-    //const Redeemer = () => Data.empty();
-    const Datum = () => Data.empty();
-  
-    const tx = await lucid
-      .newTx()
-      .payToContract(earthtrustValidatorAddress, {
-        asHash: Datum(),
-        scriptRef: earthtrustValidatorScript, // adding plutusV2 script to output
-      }, {})
-      .complete();
-
-    const signedTx = await tx.sign().complete();
-  
-    const txHash = await signedTx.submit();
-    console.log("txHash", txHash);
-    setTx({ txId: txHash });
-    return txHash;
-  } 
-
   return (
     <div className={styles.container}>
     <Head>
@@ -356,7 +315,6 @@ const Home: NextPage = (props) => {
           <p>Please wait until the transaction is confirmed on the blockchain and reload this page before doing another transaction</p>
         </div>}
         {walletIsEnabled && !tx.txId && <div className={styles.border}><BuyProduct onBuyProduct={buyProduct} orderInfo={orderInfo}/></div>}
-        {walletIsEnabled && !tx.txId && <div className={styles.border}><AddScript onAddScript={addScript}/></div>}
 
     </main>
 
