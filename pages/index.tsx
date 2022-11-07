@@ -183,10 +183,14 @@ const Home: NextPage = (props) => {
     let walletFound = false;
 
     const walletChoice = whichWalletSelected;
-    if (walletChoice === "nami") {
-        walletFound = !!window?.cardano?.nami;
-    } else if (walletChoice === "eternl") {
+    if (walletChoice === "eternl") {
         walletFound = !!window?.cardano?.eternl;
+    } else if (walletChoice === "flint") {
+        walletFound = !!window?.cardano?.flint;
+    } else if (walletChoice === "nami") {
+      walletFound = !!window?.cardano?.nami;
+    } else if (walletChoice === "yoroi") {
+    walletFound = !!window?.cardano?.yoroi;
     } 
     return walletFound;
   }
@@ -201,7 +205,11 @@ const Home: NextPage = (props) => {
             walletAPI = await window.cardano.nami.enable();
         } else if (walletChoice === "eternl") {
             walletAPI = await window.cardano.eternl.enable();
-        } 
+        } else if (walletChoice === "flint") {
+          walletAPI = await window.cardano.flint.enable();
+        } else if (walletChoice === "yoroi") {
+          walletAPI = await window.cardano.yoroi.enable();
+    } 
         return walletAPI 
     } catch (err) {
         console.log('enableWallet error', err);
@@ -290,8 +298,16 @@ const Home: NextPage = (props) => {
               <label>Eternl</label>
           </p>
           <p className={styles.borderwallet}>
+            <input type="radio" id="flint" name="wallet" value="flint" onChange={handleWalletSelect}/>
+              <label>Flint</label>
+          </p>
+          <p className={styles.borderwallet}>
             <input type="radio" id="nami" name="wallet" value="nami" onChange={handleWalletSelect}/>
               <label>Nami</label>
+          </p>
+          <p className={styles.borderwallet}>
+            <input type="radio" id="yoroi" name="wallet" value="yoroi" onChange={handleWalletSelect}/>
+              <label>Yoroi</label>
           </p>
         </div>
           {tx.txId && <div className={styles.border}><b>Transaction Success!!!</b>
