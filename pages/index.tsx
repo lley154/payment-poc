@@ -20,14 +20,12 @@ import {
   
     // set in env variables
     const orderId = (parseInt(context.query.id) || 0).toString();
-    const shop = process.env.NEXT_PUBLIC_SHOP as string;
-    const token = process.env.NEXT_PUBLIC_ACCESS_TOKEN as string;
+    const shop = process.env.SHOP as string;
+    const token = process.env.ACCESS_TOKEN as string;
     const uri = "admin/api/2022-10/orders/";
     const url = shop + uri + orderId + ".json";
     const serviceFee = 500000  // in lovelace
     const serviceFeeAda = serviceFee / 1000000   // in Ada
-    
-    console.log("url", url);
 
     try {
 
@@ -47,7 +45,7 @@ import {
       const adaReq = await fetch(adaUrl, { 
         headers: {
           'Access-Control-Allow-Origin': '*',
-          'X-CMC_PRO_API_KEY': process.env.NEXT_PUBLIC_COIN_API_KEY as string,
+          'X-CMC_PRO_API_KEY': process.env.COIN_API_KEY as string,
           'Content-Type': 'application/json',
         },
         method: 'GET'
@@ -55,11 +53,9 @@ import {
 
       const adaData = await adaReq.json();
       const adaPrice : number = adaData.data.ADA[0].quote.USD.price;
-      //console.log("orderData", orderData);
-      //console.log("adaData", adaData);
 
       if (!orderData.errors) {
-        const adaAmount = (orderData.order.total_price / adaPrice) + serviceFeeAda + 1.25; // adding 1.25 Ada to include tx fees
+        const adaAmount = (orderData.order.total_price / adaPrice) + serviceFeeAda;
         const orderInfo = {
           order_id : orderData.order.id as string,
           total : orderData.order.total_price,
@@ -67,7 +63,7 @@ import {
           shop : shop,
           access_token : token,
           ada_usd_price : adaPrice.toFixed(5),
-
+          tx_id : ""
         }
         return { props: orderInfo };
 
@@ -92,7 +88,6 @@ const Home: NextPage = (props) => {
   const [API, setAPI] = useState<undefined | any>(undefined);
   const [wInfo, setWalletInfo] = useState({ balance : ''});
   const [tx, setTx] = useState({ txId : '' });
-  const [txStatus, setTxStatus] = useState({ txStatus : '' });
   const [orderInfo, setId] = useState<undefined | any>(props);
 
   useEffect(() => {
@@ -127,50 +122,6 @@ const Home: NextPage = (props) => {
     updateWalletInfo();
   }, [API]);
 
-  useEffect(() => {
-    const updateOrder = async () => {
-
-        if (txStatus.txStatus == "SUBMITTED") {
-
-          const uri = "admin/api/2022-10/orders/";
-          const url = orderInfo.shop + uri + orderInfo.order_id + ".json";
-          const today = new Date();
-          const ada_amount : string = orderInfo.ada_amount;
-          const ada_usd_price : string = orderInfo.ada_usd_price;
-          const note_ada =  "Ada Amount = " + ada_amount;
-          const note_ada_usd = " | Ada/USD Price = " + ada_usd_price;
-          const note = note_ada + note_ada_usd;
-          const tags = "Ada Payment Status: " + txStatus.txStatus; 
-
-          const order_update = { 
-              order : {
-                id : orderInfo.order_id,
-                tags : tags,
-                note : note,
-                note_attributes : [ { ada_amount : ada_amount,
-                                     ada_usd_price : ada_usd_price as string,
-                                     date : today,
-                                     tx : tx.txId } ]
-              }
-            }
-          
-          console.log("use Effect - order update", JSON.stringify(order_update));
-          const req = await fetch(url, {
-            body : JSON.stringify(order_update),
-            headers: {
-              'Access-Control-Allow-Origin': '*',
-              'X-Shopify-Access-Token': orderInfo.access_token,
-              'Content-Type': 'application/json',
-                       
-            },
-            method: 'PUT'
-          });
-          const updateStatus = await req.json();
-          console.log("use effect - order update response", updateStatus);
-        }           
-    }
-    updateOrder();
-  }, [txStatus]);
 
   // user selects what wallet to connect to
   const handleWalletSelect = (obj : any) => {
@@ -183,10 +134,14 @@ const Home: NextPage = (props) => {
     let walletFound = false;
 
     const walletChoice = whichWalletSelected;
-    if (walletChoice === "nami") {
-        walletFound = !!window?.cardano?.nami;
-    } else if (walletChoice === "eternl") {
+    if (walletChoice === "eternl") {
         walletFound = !!window?.cardano?.eternl;
+    } else if (walletChoice === "flint") {
+        walletFound = !!window?.cardano?.flint;
+    } else if (walletChoice === "nami") {
+      walletFound = !!window?.cardano?.nami;
+    } else if (walletChoice === "yoroi") {
+      walletFound = !!window?.cardano?.yoroi;
     } 
     return walletFound;
   }
@@ -198,10 +153,14 @@ const Home: NextPage = (props) => {
   
         const walletChoice = whichWalletSelected;
         if (walletChoice === "nami") {
-            walletAPI = await window.cardano.nami.enable();
-        } else if (walletChoice === "eternl") {
-            walletAPI = await window.cardano.eternl.enable();
-        } 
+          walletAPI = await window.cardano.nami.enable();
+      } else if (walletChoice === "eternl") {
+          walletAPI = await window.cardano.eternl.enable();
+      } else if (walletChoice === "flint") {
+        walletAPI = await window.cardano.flint.enable();
+      } else if (walletChoice === "yoroi") {
+        walletAPI = await window.cardano.yoroi.enable();
+      }
         return walletAPI 
     } catch (err) {
         console.log('enableWallet error', err);
@@ -228,7 +187,7 @@ const Home: NextPage = (props) => {
     const api_key : string = "preprodxg6GaNVZoHWUfQd7HQcgUg8epWhE1aMi";
     const blockfrost_url = "https://cardano-preprod.blockfrost.io/api/v0"
     const network = "Preprod";
-    const earthtrustValidatorAddress = "addr_test1wpjqa2tlkvt00kdkk4395qfyauv33sydpx5jvdhy9e3gjrge277zn";
+    const earthtrustValidatorAddress = "addr_test1wrz803x4p3xlntqth0l8reljp0ygz6fz7zyxjxp7mc50t8cz8et8u";
     // ----------------------------------------------------------------------
 
     const lucid = await Lucid.new(
@@ -239,7 +198,8 @@ const Home: NextPage = (props) => {
     lucid.selectWallet(API);
 
     const lovelaceAmount = (orderInfo.ada_amount) * 1000000
-    const ada_usd_price : string = orderInfo.ada_usd_price;
+    const adaUsdPrice : string = orderInfo.ada_usd_price;
+    const orderId : string = orderInfo.order_id;
  
     /*
      Datum {
@@ -250,8 +210,8 @@ const Home: NextPage = (props) => {
     */
 
     const newDatum = Data.to(new Constr(0, [BigInt(lovelaceAmount - serviceFee), 
-                                            utf8ToHex(orderInfo.order_id),
-                                            utf8ToHex(ada_usd_price)]));
+                                            utf8ToHex(orderId),
+                                            utf8ToHex(adaUsdPrice)]));
 
     const tx = await lucid
       .newTx()
@@ -263,7 +223,20 @@ const Home: NextPage = (props) => {
     const txHash = await signedTx.submit();
     console.log("txHash", txHash);
     setTx({ txId: txHash });
-    //setTxStatus({txStatus : "SUBMITTED"});   // Move to an api
+
+    const updateOrderInfo = {
+      ...orderInfo,
+      tx_id : txHash
+    }
+
+    const response = await fetch('/api/updateOrder', {
+      method: 'POST',
+      body: JSON.stringify({ updateOrderInfo }),
+      headers: {
+        'Content-type' : 'application/json',
+      },
+    }) 
+    const data = await response.json();
     return txHash;
   } 
 
@@ -284,14 +257,21 @@ const Home: NextPage = (props) => {
           <p>
             Connect to your wallet 
           </p>
-
           <p className={styles.borderwallet}>
             <input type="radio" id="eternl" name="wallet" value="eternl" onChange={handleWalletSelect}/>
               <label>Eternl</label>
           </p>
           <p className={styles.borderwallet}>
+            <input type="radio" id="flint" name="wallet" value="flint" onChange={handleWalletSelect}/>
+              <label>Flint</label>
+          </p>
+          <p className={styles.borderwallet}>
             <input type="radio" id="nami" name="wallet" value="nami" onChange={handleWalletSelect}/>
               <label>Nami</label>
+          </p>
+          <p className={styles.borderwallet}>
+            <input type="radio" id="yoroi" name="wallet" value="yoroi" onChange={handleWalletSelect}/>
+              <label>Yoroi</label>
           </p>
         </div>
           {tx.txId && <div className={styles.border}><b>Transaction Success!!!</b>
