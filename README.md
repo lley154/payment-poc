@@ -2,7 +2,7 @@
 ## Getting Started
 
 ### Shopify Setup
-Next we need to update the Shopify store so when an order is placed, there is a link to pay with Ada.
+We need to update the Shopify store so when an order is placed, there is a link to pay with Ada.
 1) In Settings, select Apps and sales channels
 2) Select Develop apps for your store
 3) Select Allow custom app development
