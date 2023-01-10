@@ -58,10 +58,18 @@ We need to update the Shopify store so when an order is placed, there is a link 
 </script>
 ```
 22) Select Save
+23) In the Setting menu, select Apps and sales channels
+24) Select Develop Apps
+25) Select Pay With Ada App
+26) Select Manage Credentials
+27) Show the Access Token and copy it to your clipboard
+28) Paste the Access Token into your ~/.bashrc file for NEXT_PUBLIC_ACCESS_TOKEN value
+
 
 ### Environment variables
+You will have to create a CoinMarketCap account and obatin an API key.
+Then, add the following bash shell environment variables to your .bashrc file
 
-You will need to add following bash shell environment variables to your .bashrc file
 ```
 export NEXT_PUBLIC_SHOP="https://your-store.myshopify.com/"           # Your test store URL
 export NEXT_PUBLIC_ACCESS_TOKEN=""                                    # Shopify access token
