@@ -11,27 +11,20 @@ export default async function handler(
     const updateOrderInfo = req.body.updateOrderInfo;
     const uri = "admin/api/2022-10/orders/";
     const url : string = updateOrderInfo.shop + uri + updateOrderInfo.order_id + ".json";
-    const today = new Date();
     const ada_amount : string = updateOrderInfo.ada_amount;
     const ada_usd_price : string = updateOrderInfo.ada_usd_price;
     const note_ada =  "Ada Amount = " + ada_amount;
     const note_ada_usd = " | Ada/USD Price = " + ada_usd_price;
-    const note = note_ada + note_ada_usd;
     const txId : string = updateOrderInfo.tx_id;
+    const notes = note_ada + note_ada_usd + " | txId = " + txId;
     const orderId : string = updateOrderInfo.order_id;
     const accessToken : string = updateOrderInfo.access_token;
-
-    //const tags = "Ada Payment Status: " + txStatus.txStatus; 
 
     const order_update = { 
         order : {
           id : orderId,
           tags : "TX SUBMITTED",
-          note : note,
-          note_attributes : [ { ada_amount : ada_amount,
-                               ada_usd_price : ada_usd_price as string,
-                               date : today,
-                               tx : txId } ]
+          note : notes
         }
       }
     

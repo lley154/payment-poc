@@ -10,7 +10,7 @@ import {
   Constr,
   Data,
   Lucid,
-  SpendingValidator,
+  Network,
   TxHash, 
   utf8ToHex,
   } from "lucid-cardano"; // NPM
@@ -20,8 +20,8 @@ import {
   
     // set in env variables
     const orderId = (parseInt(context.query.id) || 0).toString();
-    const shop = process.env.SHOP as string;
-    const token = process.env.ACCESS_TOKEN as string;
+    const shop = process.env.NEXT_PUBLIC_SHOP as string;
+    const token = process.env.NEXT_PUBLIC_ACCESS_TOKEN as string;
     const uri = "admin/api/2022-10/orders/";
     const url = shop + uri + orderId + ".json";
     const serviceFee = 500000  // in lovelace
@@ -45,7 +45,7 @@ import {
       const adaReq = await fetch(adaUrl, { 
         headers: {
           'Access-Control-Allow-Origin': '*',
-          'X-CMC_PRO_API_KEY': process.env.COIN_API_KEY as string,
+          'X-CMC_PRO_API_KEY': process.env.NEXT_PUBLIC_COIN_API_KEY as string,
           'Content-Type': 'application/json',
         },
         method: 'GET'
@@ -180,16 +180,12 @@ const Home: NextPage = (props) => {
 
   const buyProduct = async () : Promise<TxHash> => {
   
-    // ----------------------------------------------------------------------
-    // Move these to env variables
-    // ----------------------------------------------------------------------
-    const serviceFee = 500000  // in lovelace
-    const api_key : string = "preprodxg6GaNVZoHWUfQd7HQcgUg8epWhE1aMi";
-    const blockfrost_url = "https://cardano-preprod.blockfrost.io/api/v0"
-    const network = "Preprod";
-    const earthtrustValidatorAddress = "addr_test1wrz803x4p3xlntqth0l8reljp0ygz6fz7zyxjxp7mc50t8cz8et8u";
-    // ----------------------------------------------------------------------
-
+    const serviceFee = process.env.NEXT_PUBLIC_SERVICE_FEE as string;
+    const api_key : string = process.env.NEXT_PUBLIC_BLOCKFROST_API_KEY as string;
+    const blockfrost_url = process.env.NEXT_PUBLIC_BLOCKFROST_API as string;
+    const network : Network = process.env.NEXT_PUBLIC_NETWORK as Network;
+    const earthtrustValAddr = process.env.NEXT_PUBLIC_EARTHTRUST_VAL_ADDR as string;
+ 
     const lucid = await Lucid.new(
       new Blockfrost(blockfrost_url, api_key),
       network,
@@ -197,7 +193,7 @@ const Home: NextPage = (props) => {
 
     lucid.selectWallet(API);
 
-    const lovelaceAmount = (orderInfo.ada_amount) * 1000000
+    const lovelaceAmount : string = ((orderInfo.ada_amount as number) * 1000000).toFixed(0);
     const adaUsdPrice : string = orderInfo.ada_usd_price;
     const orderId : string = orderInfo.order_id;
  
@@ -209,13 +205,13 @@ const Home: NextPage = (props) => {
      }
     */
 
-    const newDatum = Data.to(new Constr(0, [BigInt(lovelaceAmount - serviceFee), 
+    const newDatum = Data.to(new Constr(0, [(BigInt(lovelaceAmount) - BigInt(serviceFee)), 
                                             utf8ToHex(orderId),
                                             utf8ToHex(adaUsdPrice)]));
 
     const tx = await lucid
       .newTx()
-      .payToContract(earthtrustValidatorAddress, { inline: newDatum }, { ["lovelace"] : BigInt(lovelaceAmount) })
+      .payToContract(earthtrustValAddr, { inline: newDatum }, { ["lovelace"] : BigInt(lovelaceAmount) })
       .complete();
 
     const signedTx = await tx.sign().complete();
@@ -237,6 +233,7 @@ const Home: NextPage = (props) => {
       },
     }) 
     const data = await response.json();
+    console.log("updateOrder", data);
     return txHash;
   } 
 
