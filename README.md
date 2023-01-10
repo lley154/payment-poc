@@ -67,7 +67,7 @@ We need to update the Shopify store so when an order is placed, there is a link 
 
 
 ### Environment variables
-You will have to create a CoinMarketCap account and obatin an API key.
+You will have to create a [CoinMarketCap](https://coinmarketcap.com/) account and obatin an API key.
 Then, add the following bash shell environment variables to your .bashrc file
 
 ```
