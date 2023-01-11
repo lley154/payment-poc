@@ -3,6 +3,10 @@
 The objective of this POC was to test payment with Ada from a Shopify site using a basic Shopify plan with minimal checkout customization.
 This POC was used for the [donation traceability project](https://github.com/lley154/traceability-smart-contract) and below are end-to-end sequence diagrams showing the calls required to make this work.
 
+### Demo
+A video demo of the Shopify payment POC working with the donation traceability smart contract is located here [https://youtu.be/tw5qtZi4SIw](https://youtu.be/tw5qtZi4SIw)
+
+
 ### Commerce Sequence Diagram #1 - Lock Ada @ Smart Contract
 ![image](https://user-images.githubusercontent.com/7105016/211667690-e5754324-b7d7-4bb2-a36a-ba72c1ff83f0.png)
 
